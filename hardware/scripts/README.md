@@ -13,6 +13,7 @@ All paths in the scripts assume KiCad 10 on macOS (`/Applications/KiCad/KiCad.ap
 | `route.py` | KiCad's bundled Python | `export` writes the Specctra `.dsn` for Freerouting, `import` reads back the `.ses`, and `pour` adds GND zones on both layers. |
 | `finish.py` | KiCad's bundled Python | JLCPCB rules, solid zone connection for J1/J2, label tidy, zone refill. Prints track widths per net. |
 | `fix_parity.py` | KiCad's bundled Python | Restores the leading `/` on local net names and copies LCSC/Datasheet/Description fields from the netlist onto footprints, so DRC's schematic-parity check passes. Hide those fields afterwards (see HANDOVER.md). |
+| `label_top.py` | any Python with Pillow | Adds callout labels to `renders/keyhop-top.png`, writing `renders/keyhop-top-labelled.png`. The label text and positions (in board mm) are in the script. |
 | `render_copy.py` | KiCad's bundled Python | Makes a render-only board copy with stand-in 3D models for J1 and J2. |
 
 KiCad's bundled Python on macOS: `/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3`.

@@ -4,6 +4,8 @@ Status: **board v0.1 laid out, routed and checked; JLCPCB files generated. Not y
 
 ![keyhop v0.1 render](renders/keyhop-3d.png)
 
+Labelled top view (what each part does): [`renders/keyhop-top-labelled.png`](renders/keyhop-top-labelled.png)
+
 ## Files
 
 | File | What it is |
