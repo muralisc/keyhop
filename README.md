@@ -26,7 +26,7 @@ When you switch slots, keyhop releases any held keys on the old host first.
 
 | Board | Status | Notes |
 |---|---|---|
-| [Olimex ESP32-S3-DevKit-LiPo](https://www.olimex.com/Products/IoT/ESP32-S3/ESP32-S3-DevKit-LiPo/) | ✅ Works (default) | Keyboard on GPIO19 (D−) / GPIO20 (D+) through a USB-A breakout. Flash and monitor through the **USB-UART** USB-C port (CH340X, auto-reset). |
+| [Olimex ESP32-S3-DevKit-LiPo](https://www.olimex.com/Products/IoT/ESP32-S3/ESP32-S3-DevKit-LiPo/) | ⏳ Default target, not yet tested on hardware | Keyboard on GPIO19 (D−) / GPIO20 (D+) through a USB-A breakout. Flash and monitor through the **USB-UART** USB-C port (CH340X, auto-reset). |
 | Waveshare ESP32-S3-DEV-KIT-N8R8 | ⚠️ USB host does not work | GPIO19/20 are hard-wired to the board's CH334F hub. Bluetooth and the LED code build and run. |
 
 ### Wiring (Olimex)
