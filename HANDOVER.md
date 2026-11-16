@@ -24,7 +24,28 @@ Last updated 2026-11-16.
 3. Pair with one computer and test typing, including modifiers.
 4. Test slot switching (Left Ctrl + Left Alt + 1/2/3) and re-pairing (add Left Shift) across 3 computers.
 5. When it works, drop `CORE_DEBUG_LEVEL` back from 3 to 1 in `platformio.ini`.
-6. Later: N-key rollover (parse the keyboard's report descriptor), keyboard LED sync, battery (the Olimex LiPo can't supply 5V to the keyboard, so it needs a boost converter), the PCB in `hardware/DESIGN.md`.
+6. **Order the PCB** when ready (`hardware/DESIGN.md` → "Ordering at JLCPCB"). Check part rotations in JLCPCB's placement preview first.
+7. Later: N-key rollover (parse the keyboard's report descriptor), keyboard LED sync, battery (the Olimex LiPo can't supply 5V to the keyboard, so it needs a boost converter).
+
+## Custom PCB (v0.1)
+
+Everything is in `hardware/`. `DESIGN.md` has the circuit, parts list with LCSC numbers, board summary and ordering steps. `scripts/README.md` has the pipeline that produced the board.
+
+- **Schematic:** `keyhop.kicad_sch`, also `keyhop-schematic.pdf` and a labelled `keyhop-schematic.png` with plain-English notes on every part. It uses only stock KiCad 10 symbols, with net labels on short stubs (no long wires). ERC has one expected error: CH340C V3 tied to VCC, which the datasheet requires at 3.3 V.
+- **Board:** `keyhop.kicad_pcb`, 60 × 35 mm, 2 layers. It's 60 × 35 rather than the planned 50 × 30 because the ESP32 footprint's 48 mm-wide antenna keep-out and the 15.6 mm USB-A footprint didn't fit. Routed with Freerouting 2.5.0, with GND pours on both layers. DRC: 0 errors, 0 unconnected, 0 schematic-parity issues. Remaining warnings are cosmetic silkscreen plus "U1 differs from library" (thermal vias enlarged to 0.3 mm on purpose).
+- **Fab files:** `fab/keyhop-gerbers.zip` (separate PTH/NPTH drill files), `fab/keyhop-bom.csv`, `fab/keyhop-cpl.csv`, all in JLCPCB format. J3 (UART header) is DNP and excluded.
+- **Renders:** `renders/`. J1 and J2 use stand-in 3D models on a render-only copy, because the stock library has no models for those exact parts. The buttons show as outlines.
+- **Firmware compatibility:** the PCB matches the `olimex` firmware target (CH340C auto-reset, active-low LED on IO38, keyboard on IO19/IO20), so no firmware change should be needed.
+
+### PCB gotchas learned (KiCad 10 scripting)
+
+- KiCad 10 keeps **net classes and design rules in `.kicad_pro`**, not the board. A board made with `pcbnew.BOARD()` and `board.Save()` loses them. Use `pcbnew.NewBoard(path)` and `pcbnew.SaveBoard(path, board)`, which also write the project file.
+- Netlist local nets have a leading `/` (`/EN`, `/VBUS_A`). Keep it on board nets, or DRC's schematic-parity check flags every pad. Net-class patterns must use `/VBUS_A` too.
+- `FOOTPRINT.SetField(name, value)` creates the field **visible on silkscreen**. Hide it and move it to F.Fab afterwards.
+- `kicad-cli pcb drc --schematic-parity` only compares against a schematic with the same base name in the same folder. In a scratch folder the check is silently skipped.
+- KiCad 10 auto-creates `hardware/.history/` (a nested git repo of local snapshots). It's in `.gitignore`. Restore from it via KiCad's File → Local History.
+- Freerouting narrows tracks into fine-pitch pads (0.15–0.19 mm), so the min-track rule is 0.15 mm (JLCPCB can do 0.127 mm).
+- Specctra export or import functions exist in KiCad 10's Python: `pcbnew.ExportSpecctraDSN`, `pcbnew.ImportSpecctraSES`.
 
 ## Hardware learned the hard way
 
@@ -66,7 +87,15 @@ Workarounds considered: removing the CH334F with hot air would work, but the boa
 ## Tooling on the original machine
 
 - PlatformIO installed with `brew install platformio` (6.2.0).
+- KiCad 10.0.8 (Homebrew cask). `kicad-cli` is at `/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli`. Its bundled Python (with `pcbnew`) is at `/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3`.
+- Java (`brew install openjdk`) for Freerouting 2.5.0 (`freerouting-2.5.0.jar` from GitHub releases, SHA-256 checked against GitHub's asset digest). Claude Code's permission system blocks Claude from running the downloaded jar, so the user runs that one command with `!`.
 - `brew install poppler` was used to render schematic PDFs (`pdftoppm`, `pdftotext`).
+
+## Git state
+
+- `main` has the initial firmware and the PCB design notes.
+- `handover-notes`: this file and `CLAUDE.md`, branched from `main`.
+- `pcb-schematic`: schematic, board, fab files, renders, scripts and these notes, stacked on `handover-notes`. **This branch has everything.** Merge it into `main` when happy (`git checkout main && git merge pcb-schematic`).
 
 ## Notes for whoever picks this up (human or Claude)
 
