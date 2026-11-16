@@ -12,7 +12,7 @@ Last updated 2026-11-16.
 | USB host side on Waveshare | ❌ Can't work. GPIO19/20 are hard-wired to the board's CH334F hub (details below) |
 | Olimex ESP32-S3-DevKit-LiPo | ⏳ Ordered or arriving, **not yet tested**. Firmware target written, untested on real hardware |
 | Slot switching, re-pairing, multi-host | ⏳ Untested (needs a working keyboard path first) |
-| Custom PCB | 📝 Circuit decided, see `hardware/DESIGN.md`. No KiCad files yet |
+| Custom PCB | 📝 Schematic done and ERC-clean (one reviewed exception), footprints and LCSC numbers assigned. Board outline only; layout is next. See `hardware/DESIGN.md` |
 
 ## Next steps
 
