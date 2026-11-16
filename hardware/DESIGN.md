@@ -1,13 +1,46 @@
 # keyhop PCB: minimal version design notes
 
-Status: schematic done (`keyhop.kicad_sch`, PDF in `keyhop-schematic.pdf`) and every footprint and LCSC part number assigned. `keyhop.kicad_pcb` has only the 50 × 30 mm outline; layout is next. Target fab and assembly: JLCPCB, 2-layer board.
+Status: **board v0.1 laid out, routed and checked; JLCPCB files generated. Not yet ordered or tested on hardware.** Target fab and assembly: JLCPCB, 2-layer board, 60 × 35 mm.
 
-## Next: layout
+![keyhop v0.1 render](renders/keyhop-3d.png)
 
-1. Open `keyhop.kicad_pro` in KiCad, open the PCB editor, and run **Tools → Update PCB from Schematic** (F8).
-2. Place the parts inside the 50 × 30 mm outline, following the layout notes below, then route.
-3. Run DRC. KiCad's default rules (0.2 mm track and clearance) are within JLCPCB's 2-layer limits.
-4. ERC shows one expected error, U2 V3 and U5 VOUT ("two power outputs joined"). The CH340C datasheet requires V3 tied to VCC at 3.3 V, so right-click the marker and choose **Exclude**.
+## Files
+
+| File | What it is |
+|---|---|
+| `keyhop.kicad_pro` | KiCad project (holds net classes and design rules) |
+| `keyhop.kicad_sch` / `keyhop-schematic.pdf` | Schematic |
+| `keyhop.kicad_pcb` | Routed board |
+| `fab/keyhop-gerbers.zip` | Gerbers and drill files (separate PTH/NPTH) for JLCPCB |
+| `fab/keyhop-bom.csv` | Parts list in JLCPCB format (Comment, Designator, Footprint, LCSC Part #) |
+| `fab/keyhop-cpl.csv` | Placement file in JLCPCB format (Designator, Mid X, Mid Y, Layer, Rotation) |
+| `renders/` | 3D renders (top, bottom, perspective) |
+
+## Board v0.1 summary
+
+- **Size:** 60 × 35 mm, grown from the planned 50 × 30 mm. The ESP32 footprint's antenna keep-out (no copper in the top 6.75 mm across 48 mm) plus the 15.6 mm USB-A footprint didn't leave enough room at 50 × 30.
+- **Placement:** ESP32 in the middle with the antenna flush to the top edge. USB-C, ESD, CH340C and auto-reset on the left; USB-A, fuse and ESD on the right; regulator bottom-left; RESET/BOOT buttons under the module; LED and the unassembled UART header bottom-right.
+- **Routing:** Freerouting 2.5.0 autorouter. Power nets (+5V, +3V3, GND, /VBUS_A) are 0.5 mm, necking to 0.375 mm into small pads. Signals are 0.25 mm, necking to 0.187 mm at fine-pitch pads. 42 vias (0.6/0.3 mm, power 0.8/0.4 mm). GND pour on both layers.
+- **Rules,** set to JLCPCB 2-layer standard capability with margin: min track 0.15 mm, clearance 0.2 mm, min hole 0.3 mm, copper to edge 0.3 mm.
+- **Changes from the stock footprints:** the ESP32 module's GND-pad thermal vias were enlarged from 0.2 mm to 0.3 mm (JLCPCB's standard minimum hole). J1 and J2 connect solidly to the GND pour (no thermal relief).
+- **Checks (2026-11-16):** DRC reports 0 errors, 0 unconnected items, 0 schematic mismatches. The remaining warnings are cosmetic silkscreen ones (labels touching pads or the edge; JLCPCB clips silkscreen off pads) plus "U1 differs from library" (the via change above). ERC has one expected error, explained below.
+- **Silkscreen:** R5, C6 and R6 labels are hidden (no room). Parts are placed from the CPL file, not the labels.
+
+## Ordering at JLCPCB
+
+1. Upload `fab/keyhop-gerbers.zip`. Defaults are fine: 2 layers, 1.6 mm, HASL or ENIG.
+2. Turn on **PCB Assembly** (top side), then upload `fab/keyhop-bom.csv` and `fab/keyhop-cpl.csv`.
+3. **Check part rotations in JLCPCB's placement preview.** KiCad and JLCPCB define 0° differently for some packages, most often the SOT-23/SOT-23-5/SOT-23-6 parts, the CH340C (SOIC-16), the ESP32 module and the USB connectors. Fix any that look wrong in the preview; pin 1 markers must line up.
+4. J3 (the UART header) isn't assembled. It's excluded from the BOM and CPL.
+5. Recheck stock for each LCSC number. Extended parts (the ESP32, USB connectors, ESD chips) add a per-part setup fee.
+
+## ERC note
+
+ERC shows one expected error, U2 V3 and U5 VOUT ("two power outputs joined"). The CH340C datasheet requires V3 tied to VCC at 3.3 V, so right-click the marker and choose **Exclude**.
+
+## 3D models
+
+KiCad's library has no 3D models for J1 (HRO TYPE-C-31-M-12), J2 (XKB U231-091N-4BLRA00-S) or SW1/SW2 (XKB TS-1187A). The renders use stand-ins for the two USB sockets (GCT USB4105 and Molex 67643) on a render-only copy; the buttons show as outlines. This doesn't affect the board or the order files.
 
 ## Circuit
 
