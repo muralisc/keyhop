@@ -93,9 +93,8 @@ Workarounds considered: removing the CH334F with hot air would work, but the boa
 
 ## Git state
 
-- `main` has the initial firmware and the PCB design notes.
-- `handover-notes`: this file and `CLAUDE.md`, branched from `main`.
-- `pcb-schematic`: schematic, board, fab files, renders, scripts and these notes, stacked on `handover-notes`. **This branch has everything.** Merge it into `main` when happy (`git checkout main && git merge pcb-schematic`).
+- **`main` has everything**: firmware, handover notes, schematic, routed board, fab files, renders and scripts. `pcb-schematic` was fast-forwarded into it on 2026-11-16.
+- `handover-notes` and `pcb-schematic` are older branches kept on the remote. They're fully contained in `main` and can be deleted.
 
 ## Notes for whoever picks this up (human or Claude)
 
