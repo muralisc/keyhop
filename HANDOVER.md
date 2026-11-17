@@ -1,7 +1,7 @@
 # keyhop handover
 
 Where the project stands, what was learned the hard way, and what to do next.
-Last updated 2026-11-16.
+Last updated 2026-11-17.
 
 ## Status at a glance
 
@@ -12,7 +12,8 @@ Last updated 2026-11-16.
 | USB host side on Waveshare | ❌ Can't work. GPIO19/20 are hard-wired to the board's CH334F hub (details below) |
 | Olimex ESP32-S3-DevKit-LiPo | ⏳ Ordered or arriving, **not yet tested**. Firmware target written, untested on real hardware |
 | Slot switching, re-pairing, multi-host | ⏳ Untested (needs a working keyboard path first) |
-| Custom PCB | ✅ v0.1 routed, DRC-clean, JLCPCB files in `hardware/fab/`. Not ordered yet. See `hardware/DESIGN.md` (check part rotations in JLCPCB's preview when ordering) |
+| Custom PCB | ✅ v0.1 routed, DRC-clean, JLCPCB files in `hardware/fab/`. Not ordered yet. See `hardware/DESIGN.md` (check part rotations in JLCPCB's preview when ordering). 2026-11-17: USB-C edge notch added, fab files regenerated |
+| Enclosure | ✅ v0.1 snap-fit case designed (`hardware/enclosure/`), STLs ready for JLC3DP. Not printed or test-fitted yet |
 
 ## Next steps
 
@@ -24,7 +25,9 @@ Last updated 2026-11-16.
 3. Pair with one computer and test typing, including modifiers.
 4. Test slot switching (Left Ctrl + Left Alt + 1/2/3) and re-pairing (add Left Shift) across 3 computers.
 5. When it works, drop `CORE_DEBUG_LEVEL` back from 3 to 1 in `platformio.ini`.
-6. **Order the PCB** when ready (`hardware/DESIGN.md` → "Ordering at JLCPCB"). Check part rotations in JLCPCB's placement preview first.
+6. **Order the PCB and case together** when ready. The owner decided (2026-11-17) to **wait until the Olimex board arrives and works** before ordering, since the PCB copies the Olimex circuit.
+   - PCB: `hardware/DESIGN.md` → "Ordering at JLCPCB". Check part rotations in JLCPCB's placement preview first; if any part is out of stock, don't accept a substitute without checking.
+   - Case: upload `hardware/enclosure/keyhop-case-base.stl` and `keyhop-case-lid.stl` to JLC3DP in the same checkout (SLA resin, e.g. black; MJF nylon if the snap feels too stiff).
 7. Later: N-key rollover (parse the keyboard's report descriptor), keyboard LED sync, battery (the Olimex LiPo can't supply 5V to the keyboard, so it needs a boost converter).
 
 ## Custom PCB (v0.1)
@@ -46,6 +49,17 @@ Everything is in `hardware/`. `DESIGN.md` has the circuit, parts list with LCSC 
 - KiCad 10 auto-creates `hardware/.history/` (a nested git repo of local snapshots). It's in `.gitignore`. Restore from it via KiCad's File → Local History.
 - Freerouting narrows tracks into fine-pitch pads (0.15–0.19 mm), so the min-track rule is 0.15 mm (JLCPCB can do 0.127 mm).
 - Specctra export or import functions exist in KiCad 10's Python: `pcbnew.ExportSpecctraDSN`, `pcbnew.ImportSpecctraSES`.
+
+## Enclosure (v0.1)
+
+Everything is in `hardware/enclosure/`. `keyhop-case.scad` is the source (OpenSCAD, parametric, comments at the top); the STLs are exports.
+
+- **Design:** two-part box, 65.3 × 40.3 × 15.6 mm, 2.4 mm walls. The board rests on two ledges along the long sides (2.6 mm above the floor, clearing the USB shield pins) and four posts under the lid press it down at free corner spots. No PCB holes needed.
+- **Snap:** the walls split at the PCB top with a 3 mm lap joint (base inner half up, lid outer half down). Two bumps per long side click into grooves. Fingernail notch on the front long side.
+- **Openings:** USB-C cut sized for the plug overmold (12.4 × 6.8). USB-A cut 15.2 wide around the shell, plus a 1.4 mm outer pocket so the plug body gets near the socket. Paperclip pinholes (1.8 mm, with guide tubes) for RESET/BOOT, and a 2 mm LED window with a light tube. Engraved labels on top.
+- **Unverified dimensions:** the USB-A and USB-C datasheets couldn't be fetched (LCSC/krhro links fail), so the openings use standard sizes plus clearance. The USB-A shell height is **assumed 7.0 mm** (`usba_h`). Check against the real part once boards arrive; each opening is a single `yz_slot(...)` line in `openings()`.
+- **Collision check:** `part="collisions"` intersects the case with stand-in boxes for the board and parts; it should render as nothing (flat touching contact from the posts and ledges is expected).
+- **Build commands (Linux NUC):** OpenSCAD 2021.01 is a snap (`/snap/bin/openscad`). The snap can't write to `/tmp`, so export into the repo. PNG renders need a virtual display: `xvfb-run -a -s '-screen 0 1600x1200x24' openscad --render --colorscheme=Tomorrow -D 'part="exploded"' --imgsize=1400,1000 --camera=30,17,12,58,0,32,190 -o renders/case-exploded.png keyhop-case.scad`. STLs: `openscad -D 'part="base"' -o keyhop-case-base.stl keyhop-case.scad` and `part="lid_print"` → `keyhop-case-lid.stl`.
 
 ## Hardware learned the hard way
 
@@ -83,6 +97,12 @@ Workarounds considered: removing the CH334F with hot air would work, but the boa
 - The library only calls `onKeyboard` for HID boot-subclass keyboard interfaces. It never sends SET_PROTOCOL(boot), so it relies on the keyboard sending 8-byte boot reports by default. It also **drops any report whose first keycode is Num Lock**, and doesn't handle unplugging and replugging the keyboard well (power-cycle instead).
 - `NimBLEDevice::deinit(true)` on each slot switch leaks the small `NimBLEHIDDevice` object. That's acceptable for now.
 - `usbState()` in `main.cpp` drives both the LED and the `USB: ...` serial lines: `clientHandle` null = host stack failed, `deviceHandle` null = no device, `!isReady` = device without a usable interrupt-IN endpoint, otherwise ready.
+
+## Tooling on the Linux NUC (2026-11-17)
+
+- KiCad 10.0.8 from the Ubuntu package: `kicad-cli` is on the PATH and the **system `/usr/bin/python3` has `pcbnew`** (no bundled Python needed). Footprint library at `/usr/share/kicad/footprints`.
+- OpenSCAD via snap, `xvfb-run` for headless PNG renders (see Enclosure above).
+- The owner may connect over Remote Control from another device; send renders with SendUserFile.
 
 ## Tooling on the original machine
 

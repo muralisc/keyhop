@@ -27,6 +27,13 @@ Labelled top view (what each part does): [`renders/keyhop-top-labelled.png`](ren
 - **Changes from the stock footprints:** the ESP32 module's GND-pad thermal vias were enlarged from 0.2 mm to 0.3 mm (JLCPCB's standard minimum hole). J1 and J2 connect solidly to the GND pour (no thermal relief).
 - **Checks (2026-11-16):** DRC reports 0 errors, 0 unconnected items, 0 schematic mismatches. The remaining warnings are cosmetic silkscreen ones (labels touching pads or the edge; JLCPCB clips silkscreen off pads) plus "U1 differs from library" (the via change above). ERC has one expected error, explained below.
 - **Silkscreen:** R5, C6 and R6 labels are hidden (no room). Parts are placed from the CPL file, not the labels.
+- **USB-C notch (2026-11-17):** the board edge has a 1 mm deep notch behind J1 (x 100→101 mm, y 113.5–126.5 mm). The J1 footprint puts the shell front 0.6 mm *inside* the board edge, so a bulky cable plug could hit the board before fully seating. With the notch, the shell overhangs the edge by 0.4 mm. Only the outline and the GND pour changed; no parts or tracks moved. DRC re-run: 0 errors, same 17 cosmetic warnings.
+- **Regenerating Gerbers:** `kicad-cli pcb export gerbers --no-x2 --subtract-soldermask -l F.Cu,B.Cu,F.Paste,B.Paste,F.Silkscreen,B.Silkscreen,F.Mask,B.Mask,Edge.Cuts -o out/ keyhop.kicad_pcb` and `kicad-cli pcb export drill --format excellon --excellon-units mm --excellon-zeros-format decimal --excellon-separate-th -o out/ keyhop.kicad_pcb`, then zip the 12 files. These flags reproduce the original v0.1 files exactly. (`--board-plot-params` does **not**: it drops the Protel extensions.)
+- **J2 is a USB 3.0 (9-pin) USB-A socket** (LCSC C2880618). Only the USB 2.0 pins are wired; USB 2.0 keyboards work normally.
+
+## Enclosure
+
+`enclosure/` has a two-part snap-fit case (65 × 40 × 16 mm) designed in OpenSCAD: `keyhop-case.scad` (source), `keyhop-case-base.stl` and `keyhop-case-lid.stl` (to print), and `renders/`. Order it at JLC3DP in the same checkout as the PCB (SLA resin, or MJF nylon for a springier snap). Details are in the comments at the top of the `.scad` file and in `HANDOVER.md`.
 
 ## Ordering at JLCPCB
 
