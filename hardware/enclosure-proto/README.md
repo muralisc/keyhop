@@ -40,11 +40,21 @@ Dimensions marked "photo" in the `.scad` were estimated from phone photos with a
 
 ## Build (nuc)
 
-OpenSCAD is a snap on nuc and can't write to `/tmp`, so work in the home folder:
+OpenSCAD on nuc is the snap's **2026.11-RC0** (`latest/candidate` channel, updated 2026-11-20 from 2021.01). The snap can't write to `/tmp`, so work in the home folder:
 
     openscad -D 'part="base"' -o keyhop-proto-case-base.stl keyhop-proto-case.scad
     openscad -D 'part="lid_print"' -o keyhop-proto-case-lid.stl keyhop-proto-case.scad
     openscad -D 'part="collisions"' -o c.stl keyhop-proto-case.scad   # should be empty
-    openscad -D 'part="inside"' --imgsize=1400,1000 --camera=33,26,12,50,0,25,210 -o renders/case-inside-top.png keyhop-proto-case.scad   # colour needs preview mode (no --render), under xvfb-run
+
+Pictures (2800 × 2000, smooth curves, in colour; run under `xvfb-run -a -s '-screen 0 3000x2200x24'`):
+
+    openscad --backend=Manifold --render -D '$fn=128' -D 'part="inside"' --colorscheme=Tomorrow \
+        --imgsize=2800,2000 --camera=33,26,12,50,0,25,210 -o renders/case-inside-top.png keyhop-proto-case.scad
+
+Other views: `part="exploded"` with `--camera=35,25,20,58,0,30,230`, `part="assembly"` with
+`35,25,15,60,0,215,200`, `part="inside"` with `33,26,12,55,0,320,210` (case-inside-usba.png).
+The `libEGL ... Permission denied` warnings are harmless (software rendering).
+
+The STLs in this folder were exported with the old 2021.01 and are what was ordered on 2026-11-20.
 
 The collision check only finds flat contact (boards resting on supports) as of 2026-11-20.

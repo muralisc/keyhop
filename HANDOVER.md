@@ -122,6 +122,7 @@ nuc (`murali-NUC7PJYH`, Ubuntu 26.04 LTS, reachable as `ssh nuc`, passwordless s
 - KiCad's Python module works with the system `python3` (`import pcbnew`), so the scripts in `hardware/scripts/` run with plain `python3` on nuc. Change the macOS library paths in `sexp.py`/`build_pcb.py` to `/usr/share/kicad/symbols` and `/usr/share/kicad/footprints`.
 - KiCad's global library tables were copied from `/usr/share/kicad/template/` into `~/.config/kicad/10.0/` (what the first GUI launch would do). Without them ERC reports ~100 "library not included" warnings.
 - **PlatformIO 6.2.0** via `pipx` (`~/.local/bin/pio`).
+- **OpenSCAD 2026.11-RC0** (snap, `latest/candidate`; updated 2026-11-20 from 2021.01 on `latest/stable`). Use `--backend=Manifold` (fast, keeps colours in `--render` PNGs). The stable `openscad` Homebrew cask is disabled on macOS (Gatekeeper); `openscad@snapshot` would work on the Mac but isn't installed.
 - **Java** (OpenJDK 25, `default-jre-headless`) and **Freerouting 2.5.0** at `~/tools/freerouting/freerouting-2.5.0.jar`, SHA-256 checked against GitHub's digest.
 - Pillow (`python3-pil`) for `label_top.py`; poppler (`pdftoppm`) was already there.
 - User `murali` added to `dialout` for serial access (needs a fresh login). `brltty` is installed and is known to grab CH340 serial adapters on Ubuntu. Removing it (`sudo apt remove brltty`) is pending the owner's OK.
