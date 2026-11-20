@@ -3,7 +3,7 @@
 //
 // Render one part with:   openscad -D 'part="base"' -o base.stl keyhop-proto-case.scad
 // part = "base" | "lid" | "lid_print" (lid flipped for printing)
-//      | "assembly" | "exploded" | "collisions"
+//      | "assembly" | "exploded" | "inside" | "collisions"
 //
 // Layout (top view, X right, Y up; origin = inside corner of the base):
 //
@@ -194,6 +194,7 @@ else if (part == "lid") lid();
 else if (part == "lid_print") translate([0, 0, total_h]) rotate([180, 0, 0]) lid();
 else if (part == "assembly") { color("dimgray") base(); proxies(); color("gray", 0.35) lid(); }
 else if (part == "exploded") { color("dimgray") base(); proxies(); translate([0, 0, 30]) color("gray") lid(); }
+else if (part == "inside") { color("lightgray") base(); proxies(); }   // base with boards, lid off
 else if (part == "collisions") {   // should render as nothing
     intersection() { union() { base(); lid(); } proxies(); }
     intersection() { base(); lid(); }

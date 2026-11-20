@@ -5,6 +5,10 @@ A 3D-printed box for the no-solder build: an **Olimex ESP32-S3-DevKit-LiPo** and
 
 ![exploded view](renders/case-exploded.png)
 
+With the boards inside (lid off; boards are simple stand-in blocks: red = Olimex, dark = USB-A breakout, black = jumper housings):
+
+![boards inside](renders/case-inside-top.png)
+
 - Outside size about 70 × 55 × 33 mm, with 3 mm walls (MJF needs at least 1 mm everywhere, including beside the snap grooves). Most of the height is the space under the boards
   for the jumper wires.
 - Both boards sit right side up with their pins pointing down. The Olimex rests on two
@@ -21,7 +25,7 @@ A 3D-printed box for the no-solder build: an **Olimex ESP32-S3-DevKit-LiPo** and
 | `keyhop-proto-case.scad` | OpenSCAD source; every dimension is a named value at the top |
 | `keyhop-proto-case-base.stl` | Base, ready to print |
 | `keyhop-proto-case-lid.stl` | Lid, flipped for printing |
-| `renders/` | Pictures |
+| `renders/` | Pictures (`case-inside-*.png` show the boards in the base) |
 
 ## Check before printing
 
@@ -41,5 +45,6 @@ OpenSCAD is a snap on nuc and can't write to `/tmp`, so work in the home folder:
     openscad -D 'part="base"' -o keyhop-proto-case-base.stl keyhop-proto-case.scad
     openscad -D 'part="lid_print"' -o keyhop-proto-case-lid.stl keyhop-proto-case.scad
     openscad -D 'part="collisions"' -o c.stl keyhop-proto-case.scad   # should be empty
+    openscad -D 'part="inside"' --imgsize=1400,1000 --camera=33,26,12,50,0,25,210 -o renders/case-inside-top.png keyhop-proto-case.scad   # colour needs preview mode (no --render), under xvfb-run
 
 The collision check only finds flat contact (boards resting on supports) as of 2026-11-20.
