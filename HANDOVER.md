@@ -8,21 +8,21 @@ Last updated 2026-11-16.
 | Area | State |
 |---|---|
 | Firmware build | ✅ `pio run -e olimex` and `pio run -e waveshare` both compile (espressif32@6.5.0, Arduino core 2.0.14 / ESP-IDF 4.4.6) |
-| Bluetooth side | ✅ Verified on hardware (Waveshare): pairs as "Keyboard 1" and connects |
+| Bluetooth side | ✅ Verified on Waveshare and Olimex. Advertises as `keyhop <tag> <slot>` (was "Keyboard N" before 2026-11-20) |
 | USB host side on Waveshare | ❌ Can't work. GPIO19/20 are hard-wired to the board's CH334F hub (details below) |
-| Olimex ESP32-S3-DevKit-LiPo | ⏳ Ordered or arriving, **not yet tested**. Firmware target written, untested on real hardware |
-| Slot switching, re-pairing, multi-host | ⏳ Untested (needs a working keyboard path first) |
+| Olimex ESP32-S3-DevKit-LiPo | 🟡 Arrived 2026-11-20. Flashes via USB-UART1 with auto-reset (`/dev/cu.usbserial-10` on the Mac), boots, BLE up, USB host starts (`no device detected`). LED polarity confirmed. **USB host works**: KBDFans DZ60 (QMK) enumerates, `USB: keyboard ready`, key reports arrive with correct keycodes and modifiers. **End to end works**: paired with the Mac, typing works in TextEdit. This board's tag is **C398** |
+| Slot switching, re-pairing, multi-host | ⏳ Untested (keyboard path now works, so this is next) |
 | Custom PCB | ✅ v0.1 routed, DRC-clean, JLCPCB files in `hardware/fab/`. Not ordered yet. See `hardware/DESIGN.md` (check part rotations in JLCPCB's preview when ordering) |
 
 ## Next steps
 
-1. **Bring up the Olimex board.**
+1. ~~**Bring up the Olimex board.**~~ Done 2026-11-20 (flash, USB host, BLE typing all work).
    - Wire the USB-A breakout: D- → GPIO19, D+ → GPIO20, VBUS → +5V (EXT1 pin 21), GND → GND.
-   - Plug the Mac into the board's **USB-UART** USB-C port (not USB-OTG), then run `pio run -t upload` and `pio device monitor`. Auto-reset through the CH340X should work, so no BOOT/RESET dance. This is untested; if upload fails, hold BOOT and tap RESET.
+   - Plug the Mac into the board's **USB-UART** USB-C port (not USB-OTG), then run `pio run -t upload` and `pio device monitor`. Auto-reset through the CH340X works (confirmed), so no BOOT/RESET dance. On the Mac the port is `/dev/cu.usbserial-10`. Note: opening the serial port also resets the board.
    - Look for `USB: keyboard ready` in the log, then `key report: ...` lines when typing.
-2. **Check the LED polarity.** The schematic suggests the green LED on GPIO38 is active-low (2.2k from +3.3V), and `ledWrite()` assumes that. If the patterns look inverted, flip `ledWrite()` in `src/main.cpp`.
-3. Pair with one computer and test typing, including modifiers.
-4. Test slot switching (Left Ctrl + Left Alt + 1/2/3) and re-pairing (add Left Shift) across 3 computers.
+2. ~~Check the LED polarity.~~ Done 2026-11-20: GPIO38 LED is active-low as assumed ("no device" shows a short blip each second).
+3. ~~Pair with one computer and test typing.~~ Done 2026-11-20 on the Mac. Still check modifier shortcuts (Cmd+C/V, Shift) in real use.
+4. Test slot switching (Ctrl + Alt + 1/2/3, either side; changed 2026-11-20 because left-only didn't work for the owner) and re-pairing (add Shift) across 3 computers.
 5. When it works, drop `CORE_DEBUG_LEVEL` back from 3 to 1 in `platformio.ini`.
 6. **Order the PCB** when ready (`hardware/DESIGN.md` → "Ordering at JLCPCB"). Check part rotations in JLCPCB's placement preview first.
 7. Later: N-key rollover (parse the keyboard's report descriptor), keyboard LED sync, battery (the Olimex LiPo can't supply 5V to the keyboard, so it needs a boost converter).
@@ -65,7 +65,7 @@ Workarounds considered: removing the CH334F with hot air would work, but the boa
 - **USB-OTG** USB-C: D-/D+ go straight to GPIO19/20, no hub. GPIO19/20 are also on the EXT header.
 - That port's VBUS goes *into* the board through a 1N5819 diode, so **it can't power a keyboard**. Keep the keyboard on the USB-A breakout fed from +5V.
 - **USB-UART** USB-C: a CH340X to UART0 (GPIO43/44) with auto-reset. You can flash and see logs while the keyboard is connected.
-- LED: one green LED on GPIO38, very likely active-low.
+- LED: one green LED on GPIO38, active-low (confirmed on hardware).
 - +5V on EXT1 pin 21 works as an input or an output. The LiPo charger is built in, but on battery the rail isn't 5V.
 
 ### Other wiring facts
@@ -81,6 +81,8 @@ Workarounds considered: removing the CH334F with hot air would work, but the boa
 - **Include order matters**: `EspUsbHost.h` must come before the NimBLE headers. NimBLE's `HIDTypes.h` `#define`s names (`HID_SUBCLASS_NONE`, ...) that TinyUSB's `hid.h` uses as enum members.
 - **USB-OTG mode**: `build_unflags = -DARDUINO_USB_MODE=1`, `-DARDUINO_USB_MODE=0`, so the OTG controller owns GPIO19/20 instead of USB-Serial/JTAG. It didn't fix the Waveshare (hardware problem), but it's correct for host mode.
 - The library only calls `onKeyboard` for HID boot-subclass keyboard interfaces. It never sends SET_PROTOCOL(boot), so it relies on the keyboard sending 8-byte boot reports by default. It also **drops any report whose first keycode is Num Lock**, and doesn't handle unplugging and replugging the keyboard well (power-cycle instead).
+- **Bluetooth names** are `keyhop <tag> <slot>`. The tag is 4 hex digits from the chip's factory MAC (unique per board), or `-DKEYHOP_TAG=\"name\"` (max 6 chars, checked at compile time) via `PLATFORMIO_BUILD_FLAGS`. Name buffer is 16 bytes.
+- **Slot-switch crash (fixed 2026-11-20):** `server->setCallbacks(&serverCallbacks)` let NimBLE `delete` the static callbacks object on `deinit`, which asserted in `heap_caps_free` and rebooted. Now passes `false`. Harmless leftover: `E NimBLEAdvertising: Error enabling advertising; rc=30` during the switch.
 - `NimBLEDevice::deinit(true)` on each slot switch leaks the small `NimBLEHIDDevice` object. That's acceptable for now.
 - `usbState()` in `main.cpp` drives both the LED and the `USB: ...` serial lines: `clientHandle` null = host stack failed, `deviceHandle` null = no device, `!isReady` = device without a usable interrupt-IN endpoint, otherwise ready.
 
@@ -90,6 +92,19 @@ Workarounds considered: removing the CH334F with hot air would work, but the boa
 - KiCad 10.0.8 (Homebrew cask). `kicad-cli` is at `/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli`. Its bundled Python (with `pcbnew`) is at `/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3`.
 - Java (`brew install openjdk`) for Freerouting 2.5.0 (`freerouting-2.5.0.jar` from GitHub releases, SHA-256 checked against GitHub's asset digest). Claude Code's permission system blocks Claude from running the downloaded jar, so the user runs that one command with `!`.
 - `brew install poppler` was used to render schematic PDFs (`pdftoppm`, `pdftotext`).
+
+## Tooling on nuc (Linux build machine)
+
+nuc (`murali-NUC7PJYH`, Ubuntu 26.04 LTS, reachable as `ssh nuc`, passwordless sudo) was set up on 2026-11-16. Repo at `~/src/keyhop`.
+
+- **KiCad 10.0.8** from KiCad's PPA `ppa:kicad/kicad-10.0-releases`, with symbols, footprints, 3D models and templates. Ubuntu 26.04's own archive only has KiCad 9.0.8, which can't open these files. `/etc/apt/preferences.d/kicad-10-only` pins KiCad packages to the PPA (priority 1001) and blocks Ubuntu's (−1), so updates can never drop to 9.x. **Never downgrade KiCad; stop and ask the owner instead.**
+- KiCad's Python module works with the system `python3` (`import pcbnew`), so the scripts in `hardware/scripts/` run with plain `python3` on nuc. Change the macOS library paths in `sexp.py`/`build_pcb.py` to `/usr/share/kicad/symbols` and `/usr/share/kicad/footprints`.
+- KiCad's global library tables were copied from `/usr/share/kicad/template/` into `~/.config/kicad/10.0/` (what the first GUI launch would do). Without them ERC reports ~100 "library not included" warnings.
+- **PlatformIO 6.2.0** via `pipx` (`~/.local/bin/pio`).
+- **Java** (OpenJDK 25, `default-jre-headless`) and **Freerouting 2.5.0** at `~/tools/freerouting/freerouting-2.5.0.jar`, SHA-256 checked against GitHub's digest.
+- Pillow (`python3-pil`) for `label_top.py`; poppler (`pdftoppm`) was already there.
+- User `murali` added to `dialout` for serial access (needs a fresh login). `brltty` is installed and is known to grab CH340 serial adapters on Ubuntu. Removing it (`sudo apt remove brltty`) is pending the owner's OK.
+- Verified on nuc: ERC (1 expected V3 error) and DRC (0 errors, 0 unconnected, 0 parity issues) give the same results as the Mac.
 
 ## Git state
 

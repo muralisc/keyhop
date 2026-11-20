@@ -1,8 +1,8 @@
 // Wired USB keyboard -> Bluetooth LE keyboard, 3 host slots.
 // ESP32-S3: keyboard on USB host pins (GPIO19/20), BLE out.
 //
-// Slot switch:   Left Ctrl + Left Alt + 1 / 2 / 3
-// Re-pair slot:  Left Ctrl + Left Alt + Left Shift + 1 / 2 / 3  (forgets that slot's host)
+// Slot switch:   Ctrl + Alt + 1 / 2 / 3          (left or right Ctrl/Alt, e.g. Right Ctrl + Right Alt)
+// Re-pair slot:  Ctrl + Alt + Shift + 1 / 2 / 3  (forgets that slot's host)
 // The chord is swallowed and never reaches the computer.
 //
 // Build for the board with -DBOARD_OLIMEX or -DBOARD_WAVESHARE (see platformio.ini).
@@ -27,9 +27,10 @@
 constexpr uint8_t NUM_SLOTS = 3;
 constexpr uint8_t LED_PIN = 38;  // Olimex: single green LED, active-low. Waveshare: RGB LED.
 
-constexpr uint8_t MOD_LCTRL = 0x01;
-constexpr uint8_t MOD_LSHIFT = 0x02;
-constexpr uint8_t MOD_LALT = 0x04;
+// Modifier bits in a boot keyboard report; left and right versions both count.
+constexpr uint8_t MOD_CTRL = 0x01 | 0x10;   // Left Ctrl | Right Ctrl
+constexpr uint8_t MOD_SHIFT = 0x02 | 0x20;  // Left Shift | Right Shift
+constexpr uint8_t MOD_ALT = 0x04 | 0x40;    // Left Alt | Right Alt
 constexpr uint8_t KEY_1 = 0x1E;  // HID usage for "1"; 2 and 3 follow
 
 struct Report {
@@ -102,6 +103,25 @@ class ServerCallbacks : public NimBLEServerCallbacks {
 };
 static ServerCallbacks serverCallbacks;
 
+// Tag that tells several keyhops apart in Bluetooth lists: "keyhop <tag> <slot>".
+// Default: 4 hex digits from this chip's factory MAC (unique per board, e.g. A3F2).
+// Override per board at build time, up to 6 characters:
+//   PLATFORMIO_BUILD_FLAGS='-DKEYHOP_TAG=\"desk\"' pio run -t upload
+static const char *boardTag() {
+#ifdef KEYHOP_TAG
+  static_assert(sizeof(KEYHOP_TAG) - 1 <= 6, "KEYHOP_TAG must be 6 characters or fewer");
+  return KEYHOP_TAG;
+#else
+  static char tag[5];
+  if (!tag[0]) {
+    uint8_t mac[6];
+    esp_efuse_mac_get_default(mac);  // factory MAC, not changed by esp_base_mac_addr_set
+    snprintf(tag, sizeof(tag), "%02X%02X", mac[4], mac[5]);
+  }
+  return tag;
+#endif
+}
+
 static void startBle(uint8_t slot) {
   if (bleUp) {
     NimBLEDevice::deinit(true);  // bonds stay in flash; only RAM objects are freed
@@ -119,13 +139,13 @@ static void startBle(uint8_t slot) {
   esp_base_mac_addr_set(mac);
 
   char name[16];
-  snprintf(name, sizeof(name), "Keyboard %u", slot + 1);
+  snprintf(name, sizeof(name), "keyhop %s %u", boardTag(), slot + 1);
   NimBLEDevice::init(name);
   NimBLEDevice::setSecurityAuth(true, false, true);  // bonding, no MITM, secure connections
   NimBLEDevice::setSecurityIOCap(BLE_HS_IO_NO_INPUT_OUTPUT);
 
   server = NimBLEDevice::createServer();
-  server->setCallbacks(&serverCallbacks);
+  server->setCallbacks(&serverCallbacks, false);  // static object: NimBLE must not delete it on deinit
 
   hid = new NimBLEHIDDevice(server);
   input = hid->inputReport(1);
@@ -144,7 +164,7 @@ static void startBle(uint8_t slot) {
   bleUp = true;
   slotShownMs = millis();
 
-  Serial.printf("BLE up, slot %u\n", slot + 1);
+  Serial.printf("BLE up, slot %u, name \"%s\"\n", slot + 1, name);
 }
 
 static void sendReport(const uint8_t *b) {
@@ -196,13 +216,13 @@ static void handleReport(const uint8_t *r) {
     return;
   }
 
-  if ((mods & (MOD_LCTRL | MOD_LALT)) == (MOD_LCTRL | MOD_LALT)) {
+  if ((mods & MOD_CTRL) && (mods & MOD_ALT)) {
     for (int i = 2; i < 8; i++) {
       uint8_t k = r[i];
       if (k >= KEY_1 && k < KEY_1 + NUM_SLOTS) {
         swallowing = true;
         uint8_t s = k - KEY_1;
-        if (mods & MOD_LSHIFT) {
+        if (mods & MOD_SHIFT) {
           repairSlot(s);
         } else {
           switchSlot(s);
@@ -334,7 +354,7 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   ledWrite(false);
 #endif
-  Serial.println("\nBLE keyboard converter starting");
+  Serial.printf("\nkeyhop starting, board tag %s\n", boardTag());
   prefs.begin("kb", false);
   currentSlot = prefs.getUChar("slot", 0);
   if (currentSlot >= NUM_SLOTS) currentSlot = 0;

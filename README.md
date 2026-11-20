@@ -7,7 +7,7 @@ An ESP32-S3 acts as a USB host for the keyboard and re-sends every keystroke ove
 ## Features
 
 - **Any USB boot-protocol keyboard.** No drivers and no software on the computer.
-- **Three host slots.** Each slot shows up with its own Bluetooth address and name (`Keyboard 1`, `Keyboard 2`, `Keyboard 3`), so every computer pairs with what it sees as a separate keyboard.
+- **Three host slots.** Each slot shows up with its own Bluetooth address and name (`keyhop A3F2 1`, `keyhop A3F2 2`, `keyhop A3F2 3`), so every computer pairs with what it sees as a separate keyboard. `A3F2` is a tag unique to each board (from its chip, printed in the serial log at startup), so several keyhops can be told apart. To choose your own tag (up to 6 characters), flash with `PLATFORMIO_BUILD_FLAGS='-DKEYHOP_TAG=\"desk\"' pio run -t upload`.
 - **Chord switching.** The chord is swallowed and never reaches the computer.
 - **Per-slot re-pairing.** Forget one slot's host without touching the others.
 - **Remembers the last slot** across power cycles. Bonds are kept in flash.
@@ -17,8 +17,8 @@ An ESP32-S3 acts as a USB host for the keyboard and re-sends every keystroke ove
 
 | Chord | Action |
 |---|---|
-| `Left Ctrl` + `Left Alt` + `1` / `2` / `3` | Switch to slot 1 / 2 / 3 |
-| `Left Ctrl` + `Left Alt` + `Left Shift` + `1` / `2` / `3` | Forget that slot's host and start pairing again |
+| `Ctrl` + `Alt` + `1` / `2` / `3` | Switch to slot 1 / 2 / 3 (left or right Ctrl/Alt) |
+| `Ctrl` + `Alt` + `Shift` + `1` / `2` / `3` | Forget that slot's host and start pairing again |
 
 When you switch slots, keyhop releases any held keys on the old host first.
 
@@ -65,11 +65,11 @@ Dependencies (installed by PlatformIO):
 ## Pairing
 
 1. Power the board with a keyboard plugged in.
-2. Press `Left Ctrl` + `Left Alt` + `1` to choose slot 1.
-3. On the computer, open the Bluetooth settings and pair with **Keyboard 1**. No PIN is needed.
+2. Press `Ctrl` + `Alt` + `1` to choose slot 1.
+3. On the computer, open the Bluetooth settings and pair with **keyhop XXXX 1** (XXXX is the board's tag). No PIN is needed.
 4. Repeat with slots 2 and 3 on other computers.
 
-If a computer forgets the keyboard, or you want to give the slot to a different computer, press `Left Ctrl` + `Left Alt` + `Left Shift` + slot number to clear that slot's bond and pair again.
+If a computer forgets the keyboard, or you want to give the slot to a different computer, press `Ctrl` + `Alt` + `Shift` + slot number to clear that slot's bond and pair again.
 
 ## LED guide
 
