@@ -81,21 +81,21 @@ KiCad's library has no 3D models for J1 (HRO TYPE-C-31-M-12), J2 (XKB U231-091N-
 
 ## JLCPCB / LCSC parts
 
-Each part's LCSC number is stored in the schematic as an `LCSC` field. All numbers were checked on lcsc.com on 2026-11-16, and the part names matched. Stock and JLCPCB Basic/Extended status change, so recheck on jlcpcb.com before ordering.
+Each part's LCSC number is stored in the schematic as an `LCSC` field. **2026-11-20 substitutions** (originals out of stock at JLCPCB): J2 C2880618 → C2880619 (the -F flat-front version; the datasheets' recommended PCB layouts are dimensionally identical), SW1/SW2 C318884 → C480267 (same TS-1187A family and footprint, stiffer 2.6 N), D1 C72043 → C12624 (any 0603 LED fits), U2 C84681 → C7464026 (JLCPCB's own CH340C match). All numbers were checked on lcsc.com on 2026-11-16, and the part names matched. Stock and JLCPCB Basic/Extended status change, so recheck on jlcpcb.com before ordering.
 
 | Ref | Part | Footprint | LCSC |
 |---|---|---|---|
 | U1 | ESP32-S3-WROOM-1-N8 | RF_Module:ESP32-S3-WROOM-1 | C2913198 |
-| U2 | CH340C | SOIC-16 | C84681 |
+| U2 | CH340C | SOIC-16 | C7464026 (JLCPCB's own match; was C84681) |
 | U3, U4 | USBLC6-2SC6 | SOT-23-6 | C7519 |
 | U5 | AP2112K-3.3TRG1 | SOT-23-5 | C51118 |
 | J1 | HRO TYPE-C-31-M-12 | USB_C_Receptacle_HRO_TYPE-C-31-M-12 | C165948 |
-| J2 | XKB U231-091N-4BLRA00-S (USB-A female, SMD) | USB_A_Receptacle_XKB_U231-091N-4BLRA00-S | C2880618 |
+| J2 | XKB U231-091N-4BLRA00-F (USB-A female, SMD, flat front) | USB_A_Receptacle_XKB_U231-091N-4BLRA00-S (same land pattern) | C2880619 |
 | J3 | 1×4 pin header (not assembled) | PinHeader_1x04_P2.54mm_Vertical | n/a |
 | F1 | Littelfuse 1206L050YR, 500 mA hold, 6 V | Fuse_1206_3216Metric | C163512 |
 | Q1, Q2 | MMBT3904 | SOT-23 | C20526 |
-| SW1, SW2 | XKB TS-1187A-B-A-B (RESET, BOOT) | SW_Push_1P1T_XKB_TS-1187A | C318884 |
-| D1 | Everlight 19-217/GHC green LED | LED_0603_1608Metric | C72043 |
+| SW1, SW2 | XKB TS-1187A-C-A-B (RESET, BOOT), 2.6 N | SW_Push_1P1T_XKB_TS-1187A | C480267 |
+| D1 | Hubei KENTO KT-0603G green LED | LED_0603_1608Metric | C12624 |
 | R1, R2 | 5.1k 0603 | R_0603_1608Metric | C23186 |
 | R3–R6 | 10k 0603 | R_0603_1608Metric | C25804 |
 | R7 | 1k 0603 | R_0603_1608Metric | C21190 |
