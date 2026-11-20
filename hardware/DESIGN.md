@@ -1,6 +1,6 @@
 # keyhop PCB: minimal version design notes
 
-Status: **board v0.1 laid out, routed and checked; JLCPCB files generated. Not yet ordered or tested on hardware.** Target fab and assembly: JLCPCB, 2-layer board, 60 × 35 mm.
+Status: **board v0.1 laid out, routed and checked; JLCPCB files generated. Not yet ordered or tested on hardware.** The circuit it copies from the Olimex board (CH340 auto-reset, active-low LED on IO38, keyboard on IO19/IO20) was confirmed working on the Olimex on 2026-11-20, and DRC/ERC were re-run clean that day, so no changes were needed before ordering. Target fab and assembly: JLCPCB, 2-layer board, 60 × 35 mm.
 
 ![keyhop v0.1 render](renders/keyhop-3d.png)
 
