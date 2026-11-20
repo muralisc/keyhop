@@ -41,7 +41,7 @@ y0 = -gap - wall;  y1 = pcb_h + gap + wall;
 usbc_y  = 15;            // J1 centre
 usbc_zc = pcb_top + 1.63; // USB-C shell 3.26 mm tall, sits on the board
 usba_y  = 15;            // J2 centre
-usba_h  = 7.0;           // assumed USB-A shell height (datasheet unreadable)
+usba_h  = 7.0;           // USB-A shell height: 7.00 mm per the C2880619 (-F) datasheet
 sw   = [[24.6, 3.6], [35.4, 3.6]];   // SW1 RESET, SW2 BOOT (1.5 mm tall)
 led  = [42.0, 1.6];                  // D1
 posts = [[1.0, 32.6, 2.2], [59.0, 32.6, 2.2], [0.9, 0.9, 1.6], [59.0, 2.4, 2.2]];
