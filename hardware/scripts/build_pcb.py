@@ -1,7 +1,7 @@
 """Build hardware/keyhop.kicad_pcb from the schematic netlist: footprints, nets,
 placement, outline, net classes. Run with KiCad's bundled Python.
 
-usage: build_pcb.py <netlist.net> <out.kicad_pcb>
+usage: build_pcb.py <netlist.net> <out.kicad_pcb> [usbc]
 """
 import os
 import sys
@@ -12,6 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sexp import find, first, parse  # noqa: E402
 
 NETLIST, OUT = sys.argv[1], sys.argv[2]
+VARIANT = sys.argv[3] if len(sys.argv) > 3 else ""
 FPLIB = "/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints"
 
 X0, Y0, W, H = 100.0, 100.0, 60.0, 35.0  # board outline, mm
@@ -57,6 +58,17 @@ PLACE = {
 }
 
 FOOTPRINT_OVERRIDES = {}
+
+if VARIANT == "usbc":
+    # keyboard port is a USB-C receptacle mirrored from J1 onto the right edge
+    PLACE.update({
+        "J2": (155.7, 120.0, 90),
+        "U4": (146.5, 120.0, 90),
+        "R8": (156.5, 112.0, 0),
+        "R9": (156.5, 128.0, 0),
+    })
+elif VARIANT:
+    sys.exit(f"unknown variant {VARIANT!r}")
 
 # Net classes: power nets get wider tracks.
 POWER_NETS = {"GND", "+5V", "+3V3", "VBUS_A"}

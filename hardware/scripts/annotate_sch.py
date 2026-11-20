@@ -1,7 +1,7 @@
 """Add plain-English annotation text to hardware/keyhop.kicad_sch (text only,
 no connectivity changes). Idempotent: removes earlier annotations first.
 
-usage: annotate_sch.py <keyhop.kicad_sch>
+usage: annotate_sch.py <keyhop.kicad_sch> [usbc]
 """
 import os
 import sys
@@ -35,6 +35,13 @@ NOTES = [
                     "Every label with the same name is connected, as are all GND,\n"
                     "+5V and +3V3 symbols. Values: k = kilo-ohm, nF/uF = capacitance."),
 ]
+
+
+if len(sys.argv) > 2 and sys.argv[2] == "usbc":
+    NOTES = [n for n in NOTES if not n[2].startswith("J2 USB-A")] + [
+        (372.11, 58.42, "J2 USB-C socket:\nplug the keyboard in here"),
+        (353.06, 147.32, "R8/R9 56k: tell the keyboard\nthat 5 V power is available"),
+    ]
 
 
 def text_node(x, y, text):

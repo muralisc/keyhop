@@ -104,6 +104,24 @@ PARTS = [
     ("#FLG03", "power", "PWR_FLAG", "PWR_FLAG", "", "", 172.72, 251.46, {"1": "VBUS_A"}, {}),
 ]
 
+# Variant "usbc": the keyboard port is a USB-C receptacle acting as a power
+# source (DFP). Rp = 56k from VBUS_A on each CC pin advertises default USB
+# power; D+/D- of both plug orientations are joined.
+VARIANT = sys.argv[2] if len(sys.argv) > 2 else ""
+if VARIANT == "usbc":
+    PARTS = [p for p in PARTS if p[0] != "J2"] + [
+        ("J2", "Connector", "USB_C_Receptacle_USB2.0_16P", "USB-C (keyboard)",
+         "Connector_USB:USB_C_Receptacle_HRO_TYPE-C-31-M-12", "C165948", 381.0, 88.9,
+         {"A1": "GND", "B1": "GND", "A12": "GND", "B12": "GND", "SH": "GND",
+          "A4": "VBUS_A", "B4": "VBUS_A", "A9": "VBUS_A", "B9": "VBUS_A",
+          "A5": "KB_CC1", "B5": "KB_CC2", "A6": "HOST_DP", "B6": "HOST_DP",
+          "A7": "HOST_DM", "B7": "HOST_DM", "A8": None, "B8": None}, {}),
+        ("R8", "Device", "R", "56k", FP_R, "C23206", 360.68, 129.54, {"1": "VBUS_A", "2": "KB_CC1"}, {}),
+        ("R9", "Device", "R", "56k", FP_R, "C23206", 373.38, 129.54, {"1": "VBUS_A", "2": "KB_CC2"}, {}),
+    ]
+elif VARIANT:
+    sys.exit(f"unknown variant {VARIANT!r}")
+
 NOTES = [
     (25.4, 30.48, "USB-C: power in, flashing and logs via CH340C (auto-reset like the Olimex board)"),
     (195.58, 45.72, "esptool auto-reset"),
@@ -114,6 +132,11 @@ NOTES = [
     (330.2, 154.94, "Status LED, active-low on IO38 (matches BOARD_OLIMEX)"),
     (350.52, 236.22, "UART test header (not assembled)"),
 ]
+
+
+if VARIANT == "usbc":
+    NOTES = [(x, y, "USB-C host port: keyboard on IO19/IO20 (power source, 56k CC pull-ups)")
+             if t.startswith("USB-A host port") else (x, y, t) for x, y, t in NOTES]
 
 
 def u():
