@@ -12,8 +12,9 @@ Last updated 2026-11-17.
 | USB host side on Waveshare | ❌ Can't work. GPIO19/20 are hard-wired to the board's CH334F hub (details below) |
 | Olimex ESP32-S3-DevKit-LiPo | 🟡 Arrived 2026-11-20. Flashes via USB-UART1 with auto-reset (`/dev/cu.usbserial-10` on the Mac), boots, BLE up, USB host starts (`no device detected`). LED polarity confirmed. **USB host works**: KBDFans DZ60 (QMK) enumerates, `USB: keyboard ready`, key reports arrive with correct keycodes and modifiers. **End to end works**: paired with the Mac, typing works in TextEdit. This board's tag is **C398** |
 | Slot switching, re-pairing, multi-host | ⏳ Untested (keyboard path now works, so this is next) |
-| Custom PCB | ✅ v0.1 routed, DRC-clean, JLCPCB files in `hardware/fab/`. 2026-11-17: USB-C edge notch added (on nuc), fab files regenerated. 2026-11-20: 4 out-of-stock parts swapped, CPL rotations fixed from JLCPCB's preview. Being ordered 2026-11-20 |
+| Custom PCB | ✅ v0.1 routed, DRC-clean, JLCPCB files in `hardware/fab/`. 2026-11-17: USB-C edge notch added (on nuc), fab files regenerated. 2026-11-20: 4 out-of-stock parts swapped, CPL rotations fixed from JLCPCB's preview. **On hold:** JLCPCB marks every ESP32-S3-WROOM-1 variant "Standard Only", so Economic assembly isn't possible; Standard needs ≥70×70 mm (a custom panel with 5 mm gaps for the overhanging USB sockets). Owner chose the no-solder proto build for now |
 | Enclosure | ✅ v0.1 snap-fit case designed (`hardware/enclosure/`), STLs ready for JLC3DP. Being ordered with the PCB 2026-11-20; not printed or test-fitted yet |
+| Proto case | ✅ 2026-11-20: case for the no-solder build (Olimex + USB-A breakout + jumpers) in `hardware/enclosure-proto/`. Dimensions estimated from photos; not printed yet |
 
 ## Next steps
 
