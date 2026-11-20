@@ -172,27 +172,70 @@ module lid() {
 // ---- Stand-ins for the boards (previews and collision checks) ---------------
 module proxies() {
     color("firebrick") translate([ol_x0, ol_y0, pcb_z0]) cube([ol_l, ol_w, pcb_t]);
-    color("darkslategray") translate([br_x0, br_y0, pcb_z0]) cube([br_l, br_w, pcb_t]);
+    breakout_model();
     color("silver") {
         for (y = usbc_y) translate([ol_x0 - usbc_over, ol_y0 + y - usbc_w / 2, pcb_top]) cube([7.4, usbc_w, usbc_h]);
         translate([ol_x1 - 18.5, ol_y0 + mod_y[0], pcb_top]) cube([18.5 + ant, mod_y[1] - mod_y[0], mod_h]);
         translate([ol_x0 + 22, ol_y0 + 5, pcb_top]) cube([6, 6, top_h]);   // tallest white connector (approx.)
-        translate([br_x1 + br_sock_over - sock_l, br_y0 + (br_w - sock_w) / 2, pcb_top]) cube([sock_l, sock_w, sock_h]);
     }
     color("black") {
         // Olimex header rows under both long edges, and the jumper housings on four pins
         for (y = [0, ol_w - 2.54]) translate([ol_x0, ol_y0 + y, pcb_z0 - hdr_t]) cube([ol_l, 2.54, hdr_t]);
         for (x = [20, 23, 26]) translate([ol_x0 + x, ol_y0, pcb_z0 - hdr_t - 14]) cube([2.54, 2.54, 14]);
         translate([ol_x0 + 30, ol_y1 - 2.54, pcb_z0 - hdr_t - 14]) cube([2.54, 2.54, 14]);
-        // breakout header and housings (pin row ~2.5 mm in from the pin-end edge)
-        translate([br_x0 + 1.25, br_y0 + br_w / 2 - 5.08, pcb_z0 - hdr_t - 14]) cube([2.54, 10.16, hdr_t + 14]);
+    }
+}
+
+// Pi Hut USB-A breakout, drawn in more detail for the pictures. It stays inside the
+// box the case was designed around (sock_w x sock_l x sock_h socket, header below).
+module breakout_model() {
+    sx0 = br_x1 + br_sock_over;                 // socket front face
+    yc  = br_y0 + br_w / 2;
+    sh_w = 13.1; sh_h = 5.7;                    // standard USB-A receptacle shell
+    pin_x = br_x0 + 2.5;
+    pins = [-3.81, -1.27, 1.27, 3.81];          // G, D+, D-, 5V (2.54 mm pitch)
+    // black PCB with rounded corners, two mounting holes and four plated pin holes
+    color([0.08, 0.08, 0.09]) difference() {
+        translate([br_x0, br_y0, pcb_z0]) rbox(0, 0, br_l, br_w, 0, pcb_t, 1.0);
+        for (y = [br_y0 + 2.0, br_y1 - 2.0]) translate([br_x0 + 4.3, y, pcb_z0 - 1]) cylinder(d = 2.6, h = 5);
+        for (dy = pins) translate([pin_x, yc + dy, pcb_z0 - 1]) cylinder(d = 1.0, h = 5);
+    }
+    color("gold") for (dy = pins) translate([pin_x, yc + dy, pcb_top - 0.02]) difference() {
+        cylinder(d = 1.8, h = 0.05); translate([0, 0, -1]) cylinder(d = 1.0, h = 2);
+    }
+    // white silkscreen labels next to the pins
+    color("white") translate([0, 0, pcb_top]) linear_extrude(0.05) for (i = [0:3])
+        translate([pin_x + 2.4, yc + pins[i]]) text(["G", "D+", "D-", "5V"][i], size = 1.3, halign = "left", valign = "center");
+    // metal shell: open at the front, with the plastic tongue and four gold contacts inside
+    color([0.78, 0.79, 0.80]) translate([sx0 - sock_l, yc - sh_w / 2, pcb_top]) difference() {
+        cube([sock_l, sh_w, sh_h]);
+        translate([0.8, 0.3, 0.3]) cube([sock_l, sh_w - 0.6, sh_h - 0.6]);
+        translate([sock_l - 2.5, -1, sh_h - 0.31]) cube([1.2, 3.0, 0.32]);           // spring latches
+        translate([sock_l - 2.5, sh_w - 2.0, sh_h - 0.31]) cube([1.2, 3.0, 0.32]);
+    }
+    color([0.92, 0.92, 0.92]) translate([sx0 - sock_l + 0.8, yc - 5.5, pcb_top + 3.2]) cube([sock_l - 1.6, 11.0, 1.6]);
+    color("gold") for (dy = [-3.5, -1.0, 1.0, 3.5])
+        translate([sx0 - sock_l + 2.5, yc + dy - 0.5, pcb_top + 3.1]) cube([sock_l - 4.5, 1.0, 0.1]);
+    // solder tabs on the shell sides
+    color([0.78, 0.79, 0.80]) for (s = [-1, 1])
+        translate([sx0 - 9, yc + s * (sh_w / 2 + 0.25) - 0.25, pcb_top]) cube([2.5, 0.5, 1.2]);
+    // header below the board: black plastic, gold pins, then the jumper housings
+    color("black") translate([pin_x - 1.27, yc - 5.08, pcb_z0 - hdr_t]) cube([2.54, 10.16, hdr_t]);
+    color("gold") for (dy = pins) translate([pin_x - 0.32, yc + dy - 0.32, pcb_z0 - hdr_t - 6]) cube([0.64, 0.64, hdr_t + 6 + pcb_t + 0.8]);
+    for (i = [0:3]) {
+        translate([pin_x - 1.25, yc + pins[i] - 1.25, pcb_z0 - hdr_t - 14]) color([0.12, 0.12, 0.12]) cube([2.5, 2.5, 14]);
+        // wire out of each housing, bending toward the Olimex side
+        color(["black", "white", "lightgray", "dimgray"][i]) {
+            translate([pin_x, yc + pins[i], pcb_z0 - hdr_t - 16]) cylinder(d = 1.4, h = 2.01);
+            translate([pin_x, yc + pins[i], pcb_z0 - hdr_t - 16]) rotate([0, -90, 0]) cylinder(d = 1.4, h = 8);
+        }
     }
 }
 
 if (part == "base") base();
 else if (part == "lid") lid();
 else if (part == "lid_print") translate([0, 0, total_h]) rotate([180, 0, 0]) lid();
-else if (part == "assembly") { color("dimgray") base(); proxies(); color("gray", 0.35) lid(); }
+else if (part == "assembly") { color("dimgray") base(); proxies(); color("gray") lid(); }
 else if (part == "exploded") { color("dimgray") base(); proxies(); translate([0, 0, 30]) color("gray") lid(); }
 else if (part == "inside") { color("lightgray") base(); proxies(); }   // base with boards, lid off
 else if (part == "collisions") {   // should render as nothing
