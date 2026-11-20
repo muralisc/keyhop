@@ -9,6 +9,10 @@ With the boards inside (lid off; boards are simple stand-in blocks: red = Olimex
 
 ![boards inside](renders/case-inside-top.png)
 
+The Olimex close up:
+
+![Olimex close-up](renders/case-olimex-closeup.png)
+
 The USB-A breakout close up, inside and from outside:
 
 ![USB-A breakout close-up](renders/case-usba-closeup.png)
@@ -57,7 +61,7 @@ Pictures (2800 × 2000, smooth curves, in colour; run under `xvfb-run -a -s '-sc
         --imgsize=2800,2000 --camera=33,26,12,50,0,25,210 -o renders/case-inside-top.png keyhop-proto-case.scad
 
 Other views: `part="exploded"` with `--camera=35,25,20,58,0,30,230`, `part="assembly"` with
-`35,25,15,60,0,215,200`, `part="inside"` with `33,26,12,55,0,320,210` (case-inside-usba.png) and `56,10,24,40,0,300,70` (case-usba-closeup.png),
+`35,25,15,60,0,215,200`, `part="inside"` with `33,26,12,55,0,320,210` (case-inside-usba.png) `56,10,24,40,0,300,70` (case-usba-closeup.png) and `30,35,24,45,0,20,105` (case-olimex-closeup.png),
 `part="assembly"` with `110,-25,45,64,9,26` (case-usba-outside.png).
 The `libEGL ... Permission denied` warnings are harmless (software rendering).
 

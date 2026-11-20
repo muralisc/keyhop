@@ -171,18 +171,84 @@ module lid() {
 
 // ---- Stand-ins for the boards (previews and collision checks) ---------------
 module proxies() {
-    color("firebrick") translate([ol_x0, ol_y0, pcb_z0]) cube([ol_l, ol_w, pcb_t]);
+    olimex_model();
     breakout_model();
-    color("silver") {
-        for (y = usbc_y) translate([ol_x0 - usbc_over, ol_y0 + y - usbc_w / 2, pcb_top]) cube([7.4, usbc_w, usbc_h]);
-        translate([ol_x1 - 18.5, ol_y0 + mod_y[0], pcb_top]) cube([18.5 + ant, mod_y[1] - mod_y[0], mod_h]);
-        translate([ol_x0 + 22, ol_y0 + 5, pcb_top]) cube([6, 6, top_h]);   // tallest white connector (approx.)
+}
+
+// Olimex ESP32-S3-DevKit-LiPo at roughly "20% realism" for the pictures: the parts
+// you'd recognise, placed from the photos. It stays inside the space the case was
+// designed around (USB-C shells, module, tallest connector top_h, header below).
+module olimex_model() {
+    X = ol_x0;  Y = ol_y0;
+    pitch = 2.54;
+    pin_xs = [for (k = [0:21]) X + 1.27 + k * pitch];
+    rows = [Y + 1.27, Y + ol_w - 1.27];
+    // red PCB with rounded corners and 44 header holes along the long edges
+    color([0.72, 0.10, 0.10]) difference() {
+        translate([X, Y, pcb_z0]) rbox(0, 0, ol_l, ol_w, 0, pcb_t, 1.0);
+        for (x = pin_xs, y = rows) translate([x, y, pcb_z0 - 1]) cylinder(d = 1.0, h = 5);
     }
-    color("black") {
-        // Olimex header rows under both long edges, and the jumper housings on four pins
-        for (y = [0, ol_w - 2.54]) translate([ol_x0, ol_y0 + y, pcb_z0 - hdr_t]) cube([ol_l, 2.54, hdr_t]);
-        for (x = [20, 23, 26]) translate([ol_x0 + x, ol_y0, pcb_z0 - hdr_t - 14]) cube([2.54, 2.54, 14]);
-        translate([ol_x0 + 30, ol_y1 - 2.54, pcb_z0 - hdr_t - 14]) cube([2.54, 2.54, 14]);
+    // header: pin stubs above the board, black plastic and long pins below
+    color("gold") for (x = pin_xs, y = rows) {
+        translate([x - 0.32, y - 0.32, pcb_z0 - hdr_t - 6]) cube([0.64, 0.64, hdr_t + 6 + pcb_t + 1.5]);
+        translate([x, y, pcb_top - 0.02]) difference() { cylinder(d = 1.7, h = 0.05); translate([0, 0, -1]) cylinder(d = 1.0, h = 2); }
+    }
+    color("black") for (y = rows) translate([X, y - 1.27, pcb_z0 - hdr_t]) cube([ol_l, pitch, hdr_t]);
+    // two USB-C receptacles at the left edge: rounded metal shell, open at the front, with a tongue
+    for (yc = usbc_y) {
+        x0 = X - usbc_over;
+        color([0.78, 0.79, 0.80]) difference() {
+            yz_slot(x0, x0 + 7.4, Y + yc, pcb_top + usbc_h / 2, 8.94, 3.26, 1.6);
+            yz_slot(x0 - 1, x0 + 6.6, Y + yc, pcb_top + usbc_h / 2, 8.34, 2.66, 1.3);
+        }
+        color([0.1, 0.1, 0.1]) translate([x0 + 1.2, Y + yc - 3.3, pcb_top + usbc_h / 2 - 0.35]) cube([5.5, 6.6, 0.7]);
+    }
+    // ESP32-S3-WROOM-1: module PCB (antenna end overhangs the board) with a metal can
+    mx0 = ol_x1 - 18.5;  my0 = Y + mod_y[0];  mw = mod_y[1] - mod_y[0];
+    color([0.12, 0.12, 0.14]) translate([mx0, my0, pcb_top]) cube([18.5 + ant, mw, 0.8]);
+    color([0.80, 0.80, 0.82]) translate([mx0 + 0.6, my0 + 0.6, pcb_top + 0.8]) cube([17.2, mw - 1.2, mod_h - 0.8]);
+    color([0.25, 0.25, 0.27]) translate([mx0 + 9, my0 + mw / 2, pcb_top + mod_h]) linear_extrude(0.05)
+        rotate(90) text("ESP32-S3-WROOM-1", size = 1.25, halign = "center", valign = "center");
+    // meandering antenna trace on the overhang
+    color("gold") translate([0, 0, pcb_top + 0.8]) linear_extrude(0.05) {
+        ax = ol_x1 + 0.6;
+        for (i = [0:4]) translate([ax, my0 + 2 + i * 3.2]) square([ant - 1.4, 0.5]);
+        for (i = [0:3]) translate([i % 2 == 0 ? ax + ant - 1.9 : ax, my0 + 2 + i * 3.2]) square([0.5, 3.7]);
+    }
+    // RESET and BOOT buttons, two small LEDs, near the top edge (under the lid window)
+    for (bx = [17.6, 31.3]) {
+        color([0.85, 0.85, 0.86]) translate([X + bx - 1.75, Y + 24.3 - 1.5, pcb_top]) cube([3.5, 3.0, 0.9]);
+        color([0.93, 0.88, 0.75]) translate([X + bx, Y + 24.3, pcb_top + 0.9]) cylinder(d = 1.8, h = 0.8);
+    }
+    for (lx = [23.5, 27.0]) color([0.95, 0.95, 0.80]) translate([X + lx - 0.8, Y + 25.2 - 0.4, pcb_top]) cube([1.6, 0.8, 0.6]);
+    // white connectors: battery (JST-PH, horizontal) and a narrow vertical one
+    color([0.95, 0.95, 0.93]) {
+        translate([X + 28.0, Y + 4.4, pcb_top]) difference() {
+            cube([6.0, 4.5, 6.0]); translate([0.6, -1, 0.8]) cube([4.8, 4.0, 4.6]);
+        }
+        translate([X + 27.6, Y + 9.0, pcb_top]) cube([3.0, 11.0, 4.2]);
+    }
+    // a few small chips and passives
+    color([0.15, 0.15, 0.15]) {
+        translate([X + 10.5, Y + 12.5, pcb_top]) cube([4.0, 4.0, 1.0]);     // CH340X
+        translate([X + 15.5, Y + 6.0, pcb_top]) cube([3.0, 3.0, 1.0]);      // charger
+        translate([X + 19.5, Y + 15.0, pcb_top]) cube([3.0, 1.6, 1.1]);     // regulator
+    }
+    color([0.55, 0.45, 0.30]) for (p = [[9, 6], [9, 21], [13, 21.5], [20, 11], [22.5, 19], [25, 6.5], [14.5, 9.5]])
+        translate([X + p[0], Y + p[1], pcb_top]) cube([1.6, 0.8, 0.5]);
+    // white silkscreen
+    color("white") translate([0, 0, pcb_top]) linear_extrude(0.05) {
+        translate([X + ol_l - 9.5, Y + 2.6]) text("ESP32-S3-DevKit-Lipo", size = 1.2, halign = "center", valign = "bottom");
+        translate([X + 33.0, Y + 21.0]) text("Rev B", size = 1.1, halign = "left", valign = "center");
+    }
+    // jumper housings on four pins (illustrative positions) with short wires
+    for (pin = [[8, 0], [9, 0], [10, 0], [11, 1]]) {
+        px = pin_xs[pin[0]];  py = rows[pin[1]];
+        color([0.12, 0.12, 0.12]) translate([px - 1.25, py - 1.25, pcb_z0 - hdr_t - 14]) cube([2.5, 2.5, 14]);
+        color("dimgray") {
+            translate([px, py, pcb_z0 - hdr_t - 16]) cylinder(d = 1.4, h = 2.01);
+            translate([px, py, pcb_z0 - hdr_t - 16]) rotate([0, 90, 0]) cylinder(d = 1.4, h = 8);
+        }
     }
 }
 
