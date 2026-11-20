@@ -36,6 +36,13 @@ Labelled top view (what each part does): [`renders/keyhop-top-labelled.png`](ren
 4. J3 (the UART header) isn't assembled. It's excluded from the BOM and CPL.
 5. Recheck stock for each LCSC number. Extended parts (the ESP32, USB connectors, ESD chips) add a per-part setup fee.
 
+## Debugging a misbehaving board
+
+1. **LED pattern** (no tools needed): the same patterns as the Olimex, listed above `updateLed()` in `src/main.cpp`.
+2. **Logs over the board's own USB-C** (CH340C): `pio device monitor`. Opening the port resets the board, so you see the boot log from the start.
+3. **Multimeter:** +5V (USB-C VBUS or C2), +3V3 (C4 or the module's 3V3 pin), VBUS_A at J2 (~5V). With a keyboard attached, D+ (IO20) should not sit at a fluctuating ~2V (that pattern meant "enumeration keeps failing" on the Waveshare).
+4. **CP2102 adapter on J3** if the CH340C side is dead: solder a 1×4 2.54 mm header (pin 1 = square pad: 3V3, TX, RX, GND). Connect GND–GND and CP2102 RX → J3 pin 2 (TX) only, power the board from its USB-C, and leave J3 3V3 unconnected. This is **listen-only**: J3 RX has no series resistor, so the always-powered CH340C TXD drives that line and would fight the adapter. Flashing through J3 would need the CH340C removed, or a ~1k resistor on CH340C TXD in a later board revision.
+
 ## ERC note
 
 ERC shows one expected error, U2 V3 and U5 VOUT ("two power outputs joined"). The CH340C datasheet requires V3 tied to VCC at 3.3 V, so right-click the marker and choose **Exclude**.
