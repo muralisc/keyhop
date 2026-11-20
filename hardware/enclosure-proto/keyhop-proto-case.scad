@@ -36,6 +36,7 @@ win = [14, 35];                       // LED/button strip, X from USB-C edge (ph
 
 br_l = 17.3; br_w = 17.2;             // breakout board, X along socket axis (photo)
 br_sock_over = 0.8;                   // socket front past the breakout edge (photo)
+sock_into = 1.5;                      // socket pushed this far into the end wall, so a plug reaches it
 sock_w = 14.1; sock_h = 7.0; sock_l = 14.0;  // USB-A shell (photo / standard)
 
 // ---- Case ------------------------------------------------------------------
@@ -57,7 +58,7 @@ ol_y0 = fin_y + fin_t + 0.8;         ol_y1 = ol_y0 + ol_w;
 ol_x0 = usbc_over + 0.2;             ol_x1 = ol_x0 + ol_l;
 L = ol_x1 + ant + gap;               // inside length
 W = ol_y1 + gap;                     // inside width
-br_x1 = L - br_sock_over;            br_x0 = br_x1 - br_l;
+br_x1 = L + sock_into - br_sock_over; br_x0 = br_x1 - br_l;
 
 pcb_z0  = floor_t + under;
 pcb_top = pcb_z0 + pcb_t;
@@ -98,8 +99,10 @@ module openings() {
     yz_slot(x0 - 1, 0.01, ol_y0 + (usbc_y[0] + usbc_y[1]) / 2, pcb_top + usbc_h / 2,
             usbc_y[1] - usbc_y[0] + 12.6, 7.6, 1.6);
     // USB-A: around the socket shell, plus a shallow outer pocket for the plug body
+    // (no partial-depth outer pocket: it left sub-0.5 mm slivers where it met the snap lap)
     yz_slot(L - 0.01, x1 + 1, br_y0 + br_w / 2, pcb_top + sock_h / 2, sock_w + 1.5, sock_h + 1.2, 0.8);
-    yz_slot(x1 - 1.4, x1 + 1, br_y0 + br_w / 2, pcb_top + sock_h / 2, 18.5, 10.0, 1.5);
+    // shallow recess inside the end wall for the breakout's board edge (below the split, base only)
+    translate([L - 0.01, br_y0 - 0.5, pcb_z0 - 0.3]) cube([br_x1 - L + 0.3 + 0.01, br_w + 1.0, pcb_t + 0.3]);
 }
 
 // ---- Base ------------------------------------------------------------------
