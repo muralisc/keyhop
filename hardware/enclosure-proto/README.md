@@ -5,7 +5,7 @@ A 3D-printed box for the no-solder build: an **Olimex ESP32-S3-DevKit-LiPo** and
 
 ![exploded view](renders/case-exploded.png)
 
-- Outside size about 69 × 54 × 33 mm. Most of the height is the space under the boards
+- Outside size about 70 × 55 × 33 mm, with 3 mm walls (MJF needs at least 1 mm everywhere, including beside the snap grooves). Most of the height is the space under the boards
   for the jumper wires.
 - Both boards sit right side up with their pins pointing down. The Olimex rests on two
   blocks under its short ends, and the breakout on two strips under its sides. Posts and a

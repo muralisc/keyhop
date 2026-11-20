@@ -40,7 +40,7 @@ sock_w = 14.1; sock_h = 7.0; sock_l = 14.0;  // USB-A shell (photo / standard)
 
 // ---- Case ------------------------------------------------------------------
 gap     = 0.5;    // clearance around boards
-wall    = 2.4;
+wall    = 3.0;    // thick enough that the snap lap halves stay >= 1 mm after the grooves
 floor_t = 1.6;
 top_t   = 1.6;
 under   = 21.0;   // floor to board underside: header 2.5 + jumper housing ~14 + wire bend
@@ -52,8 +52,8 @@ lap_t   = (wall - clear) / 2;
 
 // Board positions inside the case
 br_y0 = gap;                         br_y1 = br_y0 + br_w;
-fin_t = 1.2;  fin_y = br_y1 + 0.9;   // lid fin keeps the boards apart
-ol_y0 = fin_y + fin_t + 0.9;         ol_y1 = ol_y0 + ol_w;
+fin_t = 1.4;  fin_y = br_y1 + 0.8;   // lid fin keeps the boards apart
+ol_y0 = fin_y + fin_t + 0.8;         ol_y1 = ol_y0 + ol_w;
 ol_x0 = usbc_over + 0.2;             ol_x1 = ol_x0 + ol_l;
 L = ol_x1 + ant + gap;               // inside length
 W = ol_y1 + gap;                     // inside width
@@ -113,7 +113,7 @@ module base() {
             }
             for (x = bump_x, s = [0, 1])                     // snap bumps, both long sides
                 translate([x, s ? W + lap_t : -lap_t, split_z + lap / 2])
-                    rotate([0, 90, 0]) cylinder(r = 0.4, h = 10, center = true);
+                    rotate([0, 90, 0]) cylinder(r = 0.35, h = 10, center = true);
         }
         inner_space(floor_t, split_z + lap + 1);
         openings();
@@ -152,7 +152,7 @@ module lid() {
         }
         for (x = bump_x, s = [0, 1])                         // grooves for the snap bumps
             translate([x, s ? W + lap_t : -lap_t, split_z + lap / 2])
-                rotate([0, 90, 0]) cylinder(r = 0.5, h = 10.6, center = true);
+                rotate([0, 90, 0]) cylinder(r = 0.45, h = 10.6, center = true);
         // window over the Olimex LEDs and buttons (status blinks, RESET/BOOT with a paperclip)
         translate([ol_x0 + win[0], ol_y1 - 7.5, ceil_z - 1]) rbox(0, 0, win[1] - win[0], 7.0, 0, 10, 1.0);
         // fingernail notch (front long side)
